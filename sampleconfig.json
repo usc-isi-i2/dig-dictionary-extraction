@@ -1,0 +1,16 @@
+{
+  "dictionary": {
+    "id_attribute": "uri",
+    "value_attribute": [
+      "name"
+    ]
+  },
+  "document": {
+    "id_attribute": "uri",
+    "value_attribute": [
+      "name"
+    ]
+  },
+  "token_size": 2,
+  "threshold": 0.8
+}
