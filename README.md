@@ -10,10 +10,19 @@ pip install faerie
 
 ## Usage
 
+Run it in console
 
 ```bash
-faerie.run(dictionary,documents,config) 
+faerie sampledictionary.json sampledocuments.json sampleconfig.json
 ```
+
+Or you can import and use it in your python code
+
+```python
+import faerie
+faerie.run("sampledictionary.json","sampledocuments.json","sampleconfig.json")
+```
+
 ### Example input and dictionary file
 
 ```json

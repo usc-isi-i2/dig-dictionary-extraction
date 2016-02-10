@@ -23,5 +23,10 @@ setup(
   ext_modules=[Extension(
         'singleheap',
         ['singleheap.c'])],
+  entry_points ={
+        'console_scripts': [
+            'faerie = faerie.faerie.faerie:consolerun'
+        ]
+    },
   install_requires=['nltk']
 )

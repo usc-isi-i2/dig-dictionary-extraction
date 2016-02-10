@@ -1,6 +1,7 @@
 from nltk.util import ngrams
 import singleheap
 import json
+import sys
 
 
 def run(dictfile, inputfile, configfile="sampleconfig.json"):
@@ -83,3 +84,10 @@ def run(dictfile, inputfile, configfile="sampleconfig.json"):
                     jsonline["entities"][entity_realid[value[0]]]["value"] = entity_real[value[0]]
                     jsonline["entities"][entity_realid[value[0]]]["candwins"] = [temp]
         print json.dumps(jsonline)
+
+def consolerun():
+    if len(sys.argv) != 4:
+        print len(sys.argv)
+        print "Wrong Argv num"
+        return 0
+    run(sys.argv[1], sys.argv[2], sys.argv[3])
