@@ -1,75 +1,67 @@
-===================
-entity_extraction
-===================
+# Faerie Entity Extraction
 
-This is an implementation of faeire entity extraction, a dictionary-baesd entity extraction.
+This is an implementation of [faeire entity extraction](http://dbgroup.cs.tsinghua.edu.cn/ligl/papers/sigmod2011-faerie.pdf), a dictionary-baesd entity extraction.
 
----------------------
-For install:
----------------------
+## Installation and dependencies
 
-pre-request:
-
-you need to install nltk and its data:
-
-1.run 
-```
-	sudo pip install -U nltk to install nltk
+```bash
+pip install faerie
 ```
 
-2.run python and type these commands:
-```
-	>>> import nltk
-	>>> nltk.download()
-```
+## Usage
 
-3.run 
-```
-	sudo pip install faerie
-```
---------------------
-Usage:
---------------------
 
-Input format for both dictionary and documents:
+```bash
+faerie.run(dictionary,documents,config) 
 ```
+### Example input and dictionary file
+
+```json
 {
-  "rdfs:label": "http://schema.org/City",
   "name": "Los Angeles",
-  "additionalProperty": {
-    "value": "0",
-    "a": "PropertyValue",
-    "text": "Population"
-  },
-  "@context": "http://localhost:8080/publish/JSON/WSP9WS1-allcountries_sample_txt-context.json",
-  "containedIn": {
-    "AdministrativeArea": "la salle county",
-    "State": "texas",
-    "Country": "united states"
-  },
-  "sameAs": "http://www.geonames.org/4046384",
-  "geo": {
-    "longitude": "-99.00003",
-    "latitude": "28.46582",
-    "a": "GeoCoordinates"
-  },
-  "additionalType": "http://dig.isi.edu/gazetteer/geonames/Placetype/P_PPL",
-  "alternateName": "Los Angeles",
+  "AdministrativeArea": "la salle county",
+  "State": "texas",
+  "Country": "united states",
   "uri": "http://dig.isi.edu/gazetteer/geonames/4046384",
-  "a": "City"
 }
 ```
-run 
-```
-	faerie.run(dictionary,documents,dictfiledsarray,docfiledsarray,ngram(optional),threshold(optional)) 
-to run the entity extraction. 
+
+### Example config file
+
+```json
+{
+  "dictionary": {
+    "id_attribute": "uri",
+    "value_attribute": [
+      "name"
+    ]
+  },
+  "document": {
+    "id_attribute": "uri",
+    "value_attribute": [
+      "name"
+    ]
+  },
+  "token_size": 2,
+  "threshold": 0.8
+}
 ```
 
--------------------------------------
-Current output is a json line:
--------------------------------------
+### Arguments:
 
-```
+#### Required
+
+  * `documents` a json file for extracting entities
+
+And
+  * `dictionary` a json file providing entities to extract
+
+#### Optional
+  * `config`
+                        json file contains fields, tokensize and threshold
+
+## Output
+```json
 {
   "entities": {
     "4046384": {
@@ -138,4 +130,5 @@ Current output is a json line:
     "value": "Los Angeles"
   }
 }
+
 ```
