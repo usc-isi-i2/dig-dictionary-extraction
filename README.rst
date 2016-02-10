@@ -30,8 +30,7 @@ Usage:
 --------------------
 
 Input format for both dictionary and documents:
-::
-```
+.. code:: json
 {
   "rdfs:label": "http://schema.org/City",
   "name": "Los Angeles",
@@ -57,7 +56,7 @@ Input format for both dictionary and documents:
   "uri": "http://dig.isi.edu/gazetteer/geonames/4046384",
   "a": "City"
 }
-```
+
 run 
 ::
 	faerie.run(dictionary,documents,dictfiledsarray,docfiledsarray,ngram(optional),threshold(optional)) 
