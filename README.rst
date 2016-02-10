@@ -31,6 +31,7 @@ Usage:
 
 Input format for both dictionary and documents:
 ::
+
 {
   "rdfs:label": "http://schema.org/City",
   "name": "Los Angeles",
@@ -66,6 +67,7 @@ to run the entity extraction.
 Current output is a json line:
 -------------------------------------
 ::
+
 {
   "entities": {
     "4046384": {
