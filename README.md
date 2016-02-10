@@ -18,11 +18,11 @@ faerie.run(dictionary,documents,config)
 
 ```json
 {
-  "name": "Los Angeles",
-  "AdministrativeArea": "la salle county",
-  "State": "texas",
   "Country": "united states",
-  "uri": "http://dig.isi.edu/gazetteer/geonames/4046384",
+  "State": "georgia",
+  "AdministrativeArea": "douglas county",
+  "name": "Woods Valley",
+  "id": "4231869"
 }
 ```
 
@@ -31,13 +31,13 @@ faerie.run(dictionary,documents,config)
 ```json
 {
   "dictionary": {
-    "id_attribute": "uri",
+    "id_attribute": "id",
     "value_attribute": [
       "name"
     ]
   },
   "document": {
-    "id_attribute": "uri",
+    "id_attribute": "id",
     "value_attribute": [
       "name"
     ]
@@ -58,77 +58,36 @@ And
 
 #### Optional
   * `config`
-                        json file contains fields, tokensize and threshold
+                        a json file contains fields, tokensize and threshold
 
 ## Output
 ```json
 {
   "entities": {
-    "4046384": {
-      "value": "Los Angeles",
+    "4231869": {
+      "value": "Woods Valley",
       "candwins": [
         {
-          "start": 0,
-          "score": 9,
-          "end": 9
-        }
-      ]
-    },
-    "4505286": {
-      "value": "Angel",
-      "candwins": [
+          "start": 64,
+          "score": 11,
+          "end": 74
+        },
         {
-          "start": 4,
-          "score": 3,
-          "end": 7
-        }
-      ]
-    },
-    "4830172": {
-      "value": "Angel",
-      "candwins": [
+          "start": 65,
+          "score": 10,
+          "end": 74
+        },
         {
-          "start": 4,
-          "score": 3,
-          "end": 7
-        }
-      ]
-    },
-    "4984229": {
-      "value": "Angel",
-      "candwins": [
-        {
-          "start": 4,
-          "score": 3,
-          "end": 7
-        }
-      ]
-    },
-    "5516301": {
-      "value": "Angeles",
-      "candwins": [
-        {
-          "start": 4,
-          "score": 5,
-          "end": 9
-        }
-      ]
-    },
-    "4707891": {
-      "value": "Los Angeles",
-      "candwins": [
-        {
-          "start": 0,
-          "score": 9,
-          "end": 9
+          "start": 196,
+          "score": 10,
+          "end": 206
         }
       ]
     }
   },
   "document": {
-    "id": "4046384",
-    "value": "Los Angeles"
+    "id": "4231868",
+    "value": "The choice of San Diego golf enthusiasts and beginners alike is Woods Valley Golf Club. Stunning tree-lined fairways and beautiful rolling slopes highlight the 18-hole championship golf course at Woods Valley. Designed with an emphasis on strategy and shot-making, the course winds through the community, following the natural contours of the countryside."
   }
 }
-
 ```
