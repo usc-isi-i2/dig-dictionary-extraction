@@ -117,7 +117,6 @@ def processDoc(line,config,dicts):
                 jsonline["entities"][entity_realid[value[0]]] = {}
                 jsonline["entities"][entity_realid[value[0]]]["value"] = entity_real[value[0]]
                 jsonline["entities"][entity_realid[value[0]]]["candwins"] = [temp]
-    return jsonline
     print json.dumps(jsonline)
 
 def processDocBySpark(line,config,dicts):
@@ -181,8 +180,15 @@ def runOnSpark(dictfile, inputfile, configfile="sampleconfig.json"):
     return candidates
 
 def consolerun():
-    if len(sys.argv) != 4:
-        print len(sys.argv)
-        print "Wrong Argv num"
-        return 0
-    run(sys.argv[1], sys.argv[2], sys.argv[3])
+    if sys.argv[1].startswith('-') and len(sys.argv) == 5:
+        option = sys.argv[1][1:]  
+        if option == "spark":
+            runOnSpark(sys.argv[2], sys.argv[3], sys.argv[4])
+        elif option == 'text':
+            run(sys.argv[2], sys.argv[3], sys.argv[4])
+        else:
+            print 'Unknown option.' 
+            sys.exit()  
+    else:
+        print "Wrong Arguments Number"
+        sys.exit()  
