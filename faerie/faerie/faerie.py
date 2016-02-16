@@ -2,23 +2,44 @@ from nltk.util import ngrams
 import singleheap
 import json
 import sys
+import os
+import sys
+import re
+import json
 
 
-def run(dictfile, inputfile, configfile="sampleconfig.json"):
-    config = json.loads(open(configfile).read())
-    n = config["token_size"]
-    threshold = config["threshold"]
-    dictfileds = config["dictionary"]["value_attribute"]
-    docfileds = config["document"]["value_attribute"]
 
+os.environ['PYSPARK_PYTHON'] = "python2.7"
+os.environ['PYSPARK_DRIVER_PYTHON'] = "python2.7"
+os.environ['SPARK_HOME'] = "/Users/karma/Documents/spark-1.6.0/"
+os.environ['_JAVA_OPTIONS'] =  "-Xmx12288m"
+sys.path.append("/Users/karma/Documents/spark-1.6.0/python/")
+sys.path.append("/Users/karma/Documents/spark-1.6.0/python/lib/py4j-0.9-src.zip")
+
+try:
+    from pyspark import SparkContext
+    from pyspark import SQLContext
+    from pyspark import SparkConf
+    from pyspark.sql import Row
+
+
+
+except ImportError as e:
+    print ("Error importing Spark Modules", e)
+    sys.exit(1)
+
+def readDict(dictfile,config):
     inverted_list = {}
     inverted_index = []
     entity_tokennum = {}
     inverted_list_len = {}
     entity_realid = {}
     entity_real = {}
-    i = 0
     maxenl = 0
+    dictfileds = config["dictionary"]["value_attribute"]
+    n = config["token_size"]
+
+    i = 0
     for line in open(dictfile):
         line = json.loads(line)
         entity_realid[i] = line[config["dictionary"]["id_attribute"]]
@@ -43,47 +64,121 @@ def run(dictfile, inputfile, configfile="sampleconfig.json"):
                 inverted_list[token].append(i)
                 inverted_list_len[token] = 1
         i += 1
+    return inverted_list,inverted_index,entity_tokennum,inverted_list_len,entity_realid,entity_real,maxenl
 
-    for line in open(inputfile):
-        line = json.loads(line)
-        documentId = line[config["document"]["id_attribute"]]
-        document_real = line[docfileds[0]]
-        for filed in docfileds[1:]:
-            document_real += " " + line[filed]
-            # tokenize document, add inverted list(empty) of new tokens in document
-        document = document_real.lower().strip()
-        jsonline = {}
-        jsonline["document"] = {}
-        jsonline["document"]["id"] = documentId
-        jsonline["document"]["value"] = document_real
-        jsonline["entities"] = {}
-        tokens = list(ngrams(document, n))
-        heap = []
-        keys = []
-        los = len(tokens)
-        # build the heap
-        for i, token in enumerate(tokens):
-            key = str(token)
-            keys.append(key)
-            try:
-                heap.append([inverted_list[key][0], i])
-            except KeyError:
-                pass
-        if heap:
-            returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
+def processDoc(line,config,dicts):
+    inverted_list = dicts[0]
+    inverted_index = dicts[1]
+    entity_tokennum = dicts[2]
+    inverted_list_len = dicts[3]
+    entity_realid = dicts[4]
+    entity_real = dicts[5]
+    maxenl = dicts[6]
+
+    threshold = config["threshold"]
+    docfileds = config["document"]["value_attribute"]
+    n = config["token_size"]
+
+    line = json.loads(line)
+    documentId = line[config["document"]["id_attribute"]]
+    document_real = line[docfileds[0]]
+    for filed in docfileds[1:]:
+        document_real += " " + line[filed]
+        
+    document = document_real.lower().strip()
+    jsonline = {}
+    jsonline["document"] = {}
+    jsonline["document"]["id"] = documentId
+    jsonline["document"]["value"] = document_real
+    jsonline["entities"] = {}
+    tokens = list(ngrams(document, n))
+    heap = []
+    keys = []
+    los = len(tokens)
+    # build the heap
+    for i, token in enumerate(tokens):
+        key = str(token)
+        keys.append(key)
+        try:
+            heap.append([inverted_list[key][0], i])
+        except KeyError:
+            pass
+    if heap:
+        returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
                                                          inverted_list, keys, los, maxenl, threshold)
-            for value in returnValuesFromC:
-                temp = {}
-                temp["start"] = value[1]
-                temp["end"] = value[2]
-                temp["score"] = value[3]
-                try:
-                    jsonline["entities"][entity_realid[value[0]]]["candwins"].append(temp)
-                except KeyError:
-                    jsonline["entities"][entity_realid[value[0]]] = {}
-                    jsonline["entities"][entity_realid[value[0]]]["value"] = entity_real[value[0]]
-                    jsonline["entities"][entity_realid[value[0]]]["candwins"] = [temp]
-        print json.dumps(jsonline)
+        for value in returnValuesFromC:
+            temp = {}
+            temp["start"] = value[1]
+            temp["end"] = value[2]
+            temp["score"] = value[3]
+            try:
+                jsonline["entities"][entity_realid[value[0]]]["candwins"].append(temp)
+            except KeyError:
+                jsonline["entities"][entity_realid[value[0]]] = {}
+                jsonline["entities"][entity_realid[value[0]]]["value"] = entity_real[value[0]]
+                jsonline["entities"][entity_realid[value[0]]]["candwins"] = [temp]
+    return jsonline
+    print json.dumps(jsonline)
+
+def processDocBySpark(line,config,dicts):
+    inverted_list = dicts[0]
+    inverted_index = dicts[1]
+    entity_tokennum = dicts[2]
+    inverted_list_len = dicts[3]
+    entity_realid = dicts[4]
+    entity_real = dicts[5]
+    maxenl = dicts[6]
+
+    threshold = config["threshold"]
+    docfileds = config["document"]["value_attribute"]
+    n = config["token_size"]
+
+    documentId = line[config["document"]["id_attribute"]]
+    document_real = line[docfileds[0]]
+    for filed in docfileds[1:]:
+        document_real += " " + line[filed]
+        
+    document = document_real.lower().strip()
+    jsdoc = Row(id=documentId,value=document_real)
+    tokens = list(ngrams(document, n))
+    heap = []
+    keys = []
+    los = len(tokens)
+    # build the heap
+    for i, token in enumerate(tokens):
+        key = str(token)
+        keys.append(key)
+        try:
+            heap.append([inverted_list[key][0], i])
+        except KeyError:
+            pass
+    jsent = []
+    if heap:
+        returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
+                                                         inverted_list, keys, los, maxenl, threshold)
+        for value in returnValuesFromC:
+            temp = Row(id=entity_realid[value[0]],value=entity_real[value[0]],start=value[1],end=value[2],score=value[3])
+            jsent.append(temp)
+    jsonline = Row(document=jsdoc,entities=jsent)
+    return jsonline
+
+def run(dictfile, inputfile, configfile="sampleconfig.json"):
+    config = json.loads(open(configfile) .read())
+    dicts = readDict(dictfile,config)
+    for line in open(inputfile):
+        processDoc(line,config,dicts)
+
+def runOnSpark(dictfile, inputfile, configfile="sampleconfig.json"):
+    config = json.loads(open(configfile).read())
+    dicts = readDict(dictfile,config)
+    sc = SparkContext(appName="DIG-DICEX")
+    sqlContext = SQLContext(sc)
+    lines = sqlContext.read.json(inputfile)
+    sc.broadcast(dicts)
+    sc.broadcast(config)
+    candidates = lines.map(lambda line : processDocBySpark(line,config,dicts))
+    candidates.saveAsTextFile("test")
+    return candidates
 
 def consolerun():
     if len(sys.argv) != 4:

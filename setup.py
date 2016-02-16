@@ -12,7 +12,7 @@ with open(path.join(here, 'description.rst'), encoding='utf-8') as f:
 
 setup(
   name = 'faerie',
-  version = '1.0.2',
+  version = '1.0.3',
   description = 'Dictionary-based entity extraction with efficient filtering',
   long_description=long_description,
   author = 'Zheng Tang',
