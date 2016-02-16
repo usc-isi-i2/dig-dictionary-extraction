@@ -6,15 +6,11 @@ from os import path
 
 here = path.abspath(path.dirname(__file__))
 
-# Get the long description from the README file
-with open(path.join(here, 'description.rst')) as f:
-    long_description = f.read()
 
 setup(
   name = 'faerie',
-  version = '1.0.3',
+  version = '1.0.4',
   description = 'Dictionary-based entity extraction with efficient filtering',
-  long_description=long_description,
   author = 'Zheng Tang',
   author_email = 'zhengtan@isi.edu',
   url = 'https://github.com/ZhengTang1120/entity_extraction/', # use the URL to the github repo
