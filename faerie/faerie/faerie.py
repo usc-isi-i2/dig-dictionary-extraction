@@ -66,7 +66,7 @@ def readDict(dictfile,config):
         i += 1
     return inverted_list,inverted_index,entity_tokennum,inverted_list_len,entity_realid,entity_real,maxenl
 
-def processDoc(line,config,dicts):
+def processDoc(line,config,dicts,runtype):
     inverted_list = dicts[0]
     inverted_index = dicts[1]
     entity_tokennum = dicts[2]
@@ -79,18 +79,16 @@ def processDoc(line,config,dicts):
     docfileds = config["document"]["value_attribute"]
     n = config["token_size"]
 
-    line = json.loads(line)
-    documentId = line[config["document"]["id_attribute"]]
-    document_real = line[docfileds[0]]
-    for filed in docfileds[1:]:
-        document_real += " " + line[filed]
-        
+    if runtype == 1 or runtype == 2:
+        if runtype == 1:
+            line = json.loads(line)
+        documentId = line[config["document"]["id_attribute"]]
+        document_real = line[docfileds[0]]
+        for filed in docfileds[1:]:
+            document_real += " " + line[filed]
+    else:
+         document_real = line.value
     document = document_real.lower().strip()
-    jsonline = {}
-    jsonline["document"] = {}
-    jsonline["document"]["id"] = documentId
-    jsonline["document"]["value"] = document_real
-    jsonline["entities"] = {}
     tokens = list(ngrams(document, n))
     heap = []
     keys = []
@@ -106,84 +104,63 @@ def processDoc(line,config,dicts):
     if heap:
         returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
                                                          inverted_list, keys, los, maxenl, threshold)
-        for value in returnValuesFromC:
-            temp = {}
-            temp["start"] = value[1]
-            temp["end"] = value[2]
-            temp["score"] = value[3]
-            try:
-                jsonline["entities"][entity_realid[value[0]]]["candwins"].append(temp)
-            except KeyError:
-                jsonline["entities"][entity_realid[value[0]]] = {}
-                jsonline["entities"][entity_realid[value[0]]]["value"] = entity_real[value[0]]
-                jsonline["entities"][entity_realid[value[0]]]["candwins"] = [temp]
-    print json.dumps(jsonline)
+        if runtype == 2 or runtype == 3: 
+            jsent = []
+            for value in returnValuesFromC:
+                temp = Row(id=entity_realid[value[0]],value=entity_real[value[0]],start=value[1],end=value[2],score=value[3])
+                jsent.append(temp)
+            if runtype == 2:
+                jsdoc = Row(id=documentId,value=document_real)
+                jsonline = Row(document=jsdoc,entities=jsent)
+                return jsonline
+            else:
+                line["matches"] = jsent
+        else:
+            jsonline = {}
+            jsonline["document"] = {}
+            jsonline["document"]["id"] = documentId
+            jsonline["document"]["value"] = document_real
+            jsonline["entities"] = {}
+            for value in returnValuesFromC:
+                temp = {}
+                temp["start"] = value[1]
+                temp["end"] = value[2]
+                temp["score"] = value[3]
+                try:
+                    jsonline["entities"][entity_realid[value[0]]]["candwins"].append(temp)
+                except KeyError:
+                    jsonline["entities"][entity_realid[value[0]]] = {}
+                    jsonline["entities"][entity_realid[value[0]]]["value"] = entity_real[value[0]]
+                    jsonline["entities"][entity_realid[value[0]]]["candwins"] = [temp]
+            print json.dumps(jsonline)
 
-def processDocBySpark(line,config,dicts):
-    inverted_list = dicts[0]
-    inverted_index = dicts[1]
-    entity_tokennum = dicts[2]
-    inverted_list_len = dicts[3]
-    entity_realid = dicts[4]
-    entity_real = dicts[5]
-    maxenl = dicts[6]
-
-    threshold = config["threshold"]
-    docfileds = config["document"]["value_attribute"]
-    n = config["token_size"]
-
-    documentId = line[config["document"]["id_attribute"]]
-    document_real = line[docfileds[0]]
-    for filed in docfileds[1:]:
-        document_real += " " + line[filed]
-        
-    document = document_real.lower().strip()
-    jsdoc = Row(id=documentId,value=document_real)
-    tokens = list(ngrams(document, n))
-    heap = []
-    keys = []
-    los = len(tokens)
-    # build the heap
-    for i, token in enumerate(tokens):
-        key = str(token)
-        keys.append(key)
-        try:
-            heap.append([inverted_list[key][0], i])
-        except KeyError:
-            pass
-    jsent = []
-    if heap:
-        returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
-                                                         inverted_list, keys, los, maxenl, threshold)
-        for value in returnValuesFromC:
-            temp = Row(id=entity_realid[value[0]],value=entity_real[value[0]],start=value[1],end=value[2],score=value[3])
-            jsent.append(temp)
-    jsonline = Row(document=jsdoc,entities=jsent)
-    return jsonline
-
-def run(dictfile, inputfile, configfile="sampleconfig.json"):
+def run(dictfile, inputfile, configfile):
     config = json.loads(open(configfile) .read())
     dicts = readDict(dictfile,config)
     for line in open(inputfile):
-        processDoc(line,config,dicts)
+        processDoc(line,config,dicts,1)
 
-def runOnSpark(dictfile, inputfile, configfile="sampleconfig.json"):
+def runOnSpark(sc,dictfile, inputfile, configfile,runtype):
     config = json.loads(open(configfile).read())
     dicts = readDict(dictfile,config)
-    sc = SparkContext(appName="DIG-DICEX")
-    sqlContext = SQLContext(sc)
-    lines = sqlContext.read.json(inputfile)
+    # sc = SparkContext(appName="DIG-DICEX")
+    if runtype == 1:
+        sqlContext = SQLContext(sc)
+        lines = sqlContext.read.json(inputfile)
+    else:
+        lines = inputfile
     sc.broadcast(dicts)
     sc.broadcast(config)
-    candidates = lines.map(lambda line : processDocBySpark(line,config,dicts))
-    candidates.saveAsTextFile("test")
+    candidates = lines.map(lambda line : processDoc(line,config,dicts,2))
+    # candidates.saveAsTextFile("test")
+    # sc.stop()
     return candidates
 
 def consolerun():
     if sys.argv[1].startswith('-') and len(sys.argv) == 5:
         option = sys.argv[1][1:]  
         if option == "spark":
-            runOnSpark(sys.argv[2], sys.argv[3], sys.argv[4])
+            runOnSpark(sys.argv[2], sys.argv[3], sys.argv[4],1)
         elif option == 'text':
             run(sys.argv[2], sys.argv[3], sys.argv[4])
         else:
@@ -192,3 +169,4 @@ def consolerun():
     else:
         print "Wrong Arguments Number"
         sys.exit()  
+# runOnSpark("sampledictionary.json","sampledocuments.json","sampleconfig.json",1)
