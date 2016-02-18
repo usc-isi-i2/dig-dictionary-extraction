@@ -79,15 +79,13 @@ def processDoc(line,config,dicts,runtype):
     docfileds = config["document"]["value_attribute"]
     n = config["token_size"]
 
-    if runtype == 1 or runtype == 2:
-        if runtype == 1:
-            line = json.loads(line)
-        documentId = line[config["document"]["id_attribute"]]
-        document_real = line[docfileds[0]]
-        for filed in docfileds[1:]:
-            document_real += " " + line[filed]
-    else:
-         document_real = line.value
+    if runtype == 1:
+        line = json.loads(line)
+    documentId = line[config["document"]["id_attribute"]]
+    document_real = line[docfileds[0]]
+    for filed in docfileds[1:]:
+        document_real += " " + line[filed]
+
     document = document_real.lower().strip()
     tokens = list(ngrams(document, n))
     heap = []
@@ -104,17 +102,15 @@ def processDoc(line,config,dicts,runtype):
     if heap:
         returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
                                                          inverted_list, keys, los, maxenl, threshold)
-        if runtype == 2 or runtype == 3: 
+        if runtype == 2: 
             jsent = []
             for value in returnValuesFromC:
                 temp = Row(id=entity_realid[value[0]],value=entity_real[value[0]],start=value[1],end=value[2],score=value[3])
                 jsent.append(temp)
-            if runtype == 2:
-                jsdoc = Row(id=documentId,value=document_real)
-                jsonline = Row(document=jsdoc,entities=jsent)
-                return jsonline
-            else:
-                line["matches"] = jsent
+            jsdoc = Row(id=documentId,value=document_real)
+            jsonline = Row(document=jsdoc,entities=jsent)
+            return jsonline
+            
         else:
             jsonline = {}
             jsonline["document"] = {}
@@ -140,10 +136,10 @@ def run(dictfile, inputfile, configfile):
     for line in open(inputfile):
         processDoc(line,config,dicts,1)
 
-def runOnSpark(sc,dictfile, inputfile, configfile,runtype):
+def runOnSpark(dictfile, inputfile, configfile,runtype):
     config = json.loads(open(configfile).read())
     dicts = readDict(dictfile,config)
-    # sc = SparkContext(appName="DIG-DICEX")
+    sc = SparkContext(appName="DIG-DICEX")
     if runtype == 1:
         sqlContext = SQLContext(sc)
         lines = sqlContext.read.json(inputfile)
@@ -152,8 +148,8 @@ def runOnSpark(sc,dictfile, inputfile, configfile,runtype):
     sc.broadcast(dicts)
     sc.broadcast(config)
     candidates = lines.map(lambda line : processDoc(line,config,dicts,2))
-    # candidates.saveAsTextFile("test")
-    # sc.stop()
+    candidates.saveAsTextFile("test")
+    sc.stop()
     return candidates
 
 def consolerun():
@@ -169,4 +165,4 @@ def consolerun():
     else:
         print "Wrong Arguments Number"
         sys.exit()  
-# runOnSpark("sampledictionary.json","sampledocuments.json","sampleconfig.json",1)
+runOnSpark("sampledictionary.json","sampledocuments.json","sampleconfig.json",1)
