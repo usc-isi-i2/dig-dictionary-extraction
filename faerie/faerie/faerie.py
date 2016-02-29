@@ -165,4 +165,4 @@ def consolerun():
     else:
         print "Wrong Arguments Number"
         sys.exit()  
-runOnSpark("sampledictionary.json","sampledocuments.json","sampleconfig.json",1)
+# runOnSpark("sampledictionary.json","sampledocuments.json","sampleconfig.json",1)

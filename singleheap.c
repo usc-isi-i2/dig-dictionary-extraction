@@ -226,9 +226,9 @@ he_getcandidates(PyObject *self, PyObject *args)
                             upper = psize-1;
                             int slen = Pe[upper] - Pe[i] + 1;
                             if(lowe<=slen && slen<=upe){
-                                int T = (loe+slen)*(threshold/(1+threshold));
+                                int T = ceil((loe+slen)*(threshold/(1+threshold)));
                                 if (occur[Pe[i]][slen-lowe] >= T){
-                                    PyList_Append(result,Py_BuildValue("[i,i,i,i]", e, Pe[i],Pe[upper],occur[Pe[i]][slen-lowe])); 
+                                    PyList_Append(result,Py_BuildValue("[i,i,i,f]", e, Pe[i],Pe[upper],1.0*(occur[Pe[i]][slen-lowe])/(slen+loe-occur[Pe[i]][slen-lowe]))); 
                                 }                                                               
                             }
                             break;
@@ -237,7 +237,7 @@ he_getcandidates(PyObject *self, PyObject *args)
                         if(lowe<=slen && slen<=upe){
                             int T = ceil((loe+slen)*(threshold/(1+threshold)));
                             if (occur[Pe[i]][slen-lowe] >= T){
-                                PyList_Append(result,Py_BuildValue("[i,i,i,i]", e, Pe[i],Pe[upper],occur[Pe[i]][slen-lowe])); 
+                                PyList_Append(result,Py_BuildValue("[i,i,i,f]", e, Pe[i],Pe[upper],1.0*(occur[Pe[i]][slen-lowe])/(slen+loe-occur[Pe[i]][slen-lowe]))); 
                             }
                         }
                         i++;
@@ -275,6 +275,15 @@ he_getcandidates(PyObject *self, PyObject *args)
             for(j=0;j<los;j++){
                 for(i=0;i<maxentitylen;i++)
                     occur[j][i] = 0;
+            }
+            int k;
+            for(l=0;l<=upe-lowe;l++){
+                if(pi-l-lowe+1>=0)
+                    k = pi-l-lowe+1;
+                else
+                    k = 0;
+                for(i=k;i<=pi;i++)
+                    occur[i][l]++;
             }
         }
         PyObject *invertedlistpilen = PyDicListGetItem(tokens,inlist_len,pi);
