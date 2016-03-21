@@ -215,7 +215,7 @@ he_getcandidates(PyObject *self, PyObject *args)
                         //Binary Span
                         int lower = j;
                         int upper = i+upe-1;
-                        while(lower<upper){
+                        while(lower<=upper){
                             int mid = ceil((upper+lower)/2);
                             if(Pe[mid]-Pe[i]+1>upe)
                                 upper = mid - 1;
