@@ -170,6 +170,7 @@ he_getcandidates(PyObject *self, PyObject *args)
         heap[i].position = p;
     }
     heapify(len,heap);
+
     e = heap[0].entity;
     //occurance count matrix
     int **occur;
@@ -212,26 +213,18 @@ he_getcandidates(PyObject *self, PyObject *args)
                 while(i<=psize-lowe){
                     j = i+lowe-1;
                     if(Pe[j]-Pe[i]<=upe){
+
                         //Binary Span
                         int lower = j;
                         int upper = i+upe-1;
+                        if (upper>=psize-1)
+                            upper = psize-1;
                         while(lower<=upper){
                             int mid = ceil((upper+lower)/2);
                             if(Pe[mid]-Pe[i]+1>upe)
                                 upper = mid - 1;
                             else
                                 lower = mid + 1;
-                        }
-                        if (upper>=psize-1){
-                            upper = psize-1;
-                            int slen = Pe[upper] - Pe[i] + 1;
-                            if(lowe<=slen && slen<=upe){
-                                int T = ceil((loe+slen)*(threshold/(1+threshold)));
-                                if (occur[Pe[i]][slen-lowe] >= T){
-                                    PyList_Append(result,Py_BuildValue("[i,i,i,f]", e, Pe[i],Pe[upper],1.0*(occur[Pe[i]][slen-lowe])/(slen+loe-occur[Pe[i]][slen-lowe]))); 
-                                }                                                               
-                            }
-                            break;
                         }
                         int slen = Pe[upper] - Pe[i] + 1;
                         if(lowe<=slen && slen<=upe){
@@ -249,19 +242,7 @@ he_getcandidates(PyObject *self, PyObject *args)
                 }
             }
             if(ei == 237392 || pi == -1){
-                for (i=0;i<los;i++){
-                    PyMem_Del(occur[i]); 
-                    occur[i] = NULL;   
-                }         
-                PyMem_Del(occur);
-                occur = NULL;
-                PyMem_Del(Pe);
-                Pe = NULL;
-                PyMem_Del(current_index);
-                current_index = NULL;
-                PyMem_Del(heap);
-                heap = NULL;
-                break;
+                return result;
             }
             e = ei;
             PyObject *lenofen = PyDicListGetItem(inindex,entity_len,e);
@@ -303,8 +284,6 @@ he_getcandidates(PyObject *self, PyObject *args)
             replace(heap,len,237392,-1);
         }
     }
-    Py_INCREF(result);
-    return result;
 }
  
 static PyMethodDef singleheap_methods[] = {
