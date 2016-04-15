@@ -3,8 +3,8 @@ import singleheap
 import json
 import sys
 
-defualtconfig = dict(dictionary={"id_attribute": "id", "value_attribute": ["name"]},
-                     document={"id_attribute": "id", "value_attribute": ["name"]}, token_size=2, threshold=0.8)
+defualtconfig = dict(dictionary={"id_attribute": "uri", "value_attribute": ["name"]},
+                     document={"id_attribute": "uri", "value_attribute": ["name"]}, token_size=2, threshold=0.8)
 
 def readDict(dictfile, config):
     inverted_list = {}
