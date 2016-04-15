@@ -4,7 +4,7 @@ import json
 import sys
 
 
-def readDict(dictfile,config):
+def readDict(dictfile, config):
     inverted_list = {}
     inverted_index = []
     entity_tokennum = {}
@@ -40,12 +40,10 @@ def readDict(dictfile,config):
                 inverted_list[token_n].append(i)
                 inverted_list_len[token_n] = 1
         i += 1
-    return inverted_list,inverted_index,entity_tokennum,inverted_list_len,entity_realid,entity_real,maxenl
+    return inverted_list, inverted_index, entity_tokennum, inverted_list_len, entity_realid, entity_real, maxenl
 
-def get_tokens(entity, n):
-    return ngrams(entity, n)
 
-def processDoc(line,dicts,config=json.loads(open("sampleconfig.json") .read())):
+def processDoc(line, dicts, config=json.loads(open("sampleconfig.json") .read())):
     inverted_list = dicts[0]
     inverted_index = dicts[1]
     entity_tokennum = dicts[2]
@@ -79,14 +77,14 @@ def processDoc(line,dicts,config=json.loads(open("sampleconfig.json") .read())):
             pass
     if heap:
             returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
-                                                             inverted_list, keys, los, maxenl, threshold)
+                                                         inverted_list, keys, los, maxenl, threshold)
             jsonline["document"] = {}
             jsonline["document"]["id"] = documentId
             jsonline["document"]["value"] = document_real
             jsonline["entities"] = {}
             for value in returnValuesFromC:
 
-                temp = {}
+                temp = dict()
                 temp["start"] = value[1]
                 temp["end"] = value[2]
                 temp["score"] = value[3]
@@ -108,7 +106,8 @@ def processDoc(line,dicts,config=json.loads(open("sampleconfig.json") .read())):
 
     return jsonline
 
-def readDictlist(dictlist,n):
+
+def readDictlist(dictlist, n):
     inverted_list = {}
     inverted_index = []
     entity_tokennum = {}
@@ -116,7 +115,6 @@ def readDictlist(dictlist,n):
     entity_realid = {}
     entity_real = {}
     maxenl = 0
-
 
     i = 0
     for line in dictlist:
@@ -131,7 +129,7 @@ def readDictlist(dictlist,n):
         for name in names:
             entity_realid[i] = line
             entity_real[i] = name
-            entity = entity_real[i].lower().strip().replace(" ","")
+            entity = entity_real[i].lower().strip().replace(" ", "")
             inverted_index.append(entity)  # record each entity and its id
             tokens = list(ngrams(entity, n))
             entity_tokennum[entity] = len(tokens)  # record each entity's token number
@@ -151,12 +149,14 @@ def readDictlist(dictlist,n):
             i += 1
     return [inverted_list, inverted_index, entity_tokennum, inverted_list_len, entity_realid, entity_real, maxenl]
 
+
 def run(dictfile, inputfile, configfile):
     config = json.loads(open(configfile) .read())
-    dicts = readDict(dictfile,config)
+    dicts = readDict(dictfile, config)
     for line in open(inputfile):
         line = json.loads(line)
-        print processDoc(line,dicts,config)
+        print processDoc(line, dicts, config)
+
 
 def consolerun():
     if len(sys.argv) == 4:
