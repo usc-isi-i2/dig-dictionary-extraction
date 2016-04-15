@@ -9,7 +9,7 @@ here = path.abspath(path.dirname(__file__))
 
 setup(
   name = 'faerie',
-  version = '1.0.7',
+  version = '1.0.9',
   description = 'Dictionary-based entity extraction with efficient filtering',
   author = 'Zheng Tang',
   author_email = 'zhengtan@isi.edu',

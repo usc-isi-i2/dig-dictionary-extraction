@@ -3,6 +3,8 @@ import singleheap
 import json
 import sys
 
+defualtconfig = dict(dictionary={"id_attribute": "id", "value_attribute": ["name"]},
+                     document={"id_attribute": "id", "value_attribute": ["name"]}, token_size=2, threshold=0.8)
 
 def readDict(dictfile, config):
     inverted_list = {}
@@ -43,7 +45,7 @@ def readDict(dictfile, config):
     return inverted_list, inverted_index, entity_tokennum, inverted_list_len, entity_realid, entity_real, maxenl
 
 
-def processDoc(line, dicts, config=json.loads(open("sampleconfig.json") .read())):
+def processDoc(line, dicts, config=defualtconfig):
     inverted_list = dicts[0]
     inverted_index = dicts[1]
     entity_tokennum = dicts[2]
@@ -76,30 +78,30 @@ def processDoc(line, dicts, config=json.loads(open("sampleconfig.json") .read())
         except KeyError:
             pass
     if heap:
-            returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
-                                                         inverted_list, keys, los, maxenl, threshold)
-            jsonline["document"] = {}
-            jsonline["document"]["id"] = documentId
-            jsonline["document"]["value"] = document_real
-            jsonline["entities"] = {}
-            for value in returnValuesFromC:
+        returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
+                                                     inverted_list, keys, los, maxenl, threshold)
+        jsonline["document"] = {}
+        jsonline["document"]["id"] = documentId
+        jsonline["document"]["value"] = document_real
+        jsonline["entities"] = {}
+        for value in returnValuesFromC:
 
-                temp = dict()
-                temp["start"] = value[1]
-                temp["end"] = value[2]
-                temp["score"] = value[3]
-                value_o = str(value[0])
+            temp = dict()
+            temp["start"] = value[1]
+            temp["end"] = value[2]
+            temp["score"] = value[3]
+            value_o = str(value[0])
+            try:
+                jsonline["entities"][entity_realid[value_o]]["candwins"].append(temp)
+            except KeyError:
                 try:
-                    jsonline["entities"][entity_realid[value_o]]["candwins"].append(temp)
+                    entity_id = entity_realid[value_o]
                 except KeyError:
-                    try:
-                        entity_id = entity_realid[value_o]
-                    except KeyError:
-                        value_o = value[0]
-                        entity_id = entity_realid[value_o]
-                    jsonline["entities"][entity_id] = {}
-                    jsonline["entities"][entity_id]["value"] = entity_real[value_o]
-                    jsonline["entities"][entity_id]["candwins"] = [temp]
+                    value_o = value[0]
+                    entity_id = entity_realid[value_o]
+                jsonline["entities"][entity_id] = {}
+                jsonline["entities"][entity_id]["value"] = entity_real[value_o]
+                jsonline["entities"][entity_id]["candwins"] = [temp]
     else:
         print 'heap is empty'
         print document_real
@@ -118,14 +120,12 @@ def readDictlist(dictlist, n):
 
     i = 0
     for line in dictlist:
-        print dictlist[line]["name"]
         names = []
         if type(dictlist[line]["name"]) == list:
             names = dictlist[line]["name"]
         else:
             names.append(dictlist[line]["name"])
 
-        print names
         for name in names:
             entity_realid[i] = line
             entity_real[i] = name
@@ -151,7 +151,7 @@ def readDictlist(dictlist, n):
 
 
 def run(dictfile, inputfile, configfile):
-    config = json.loads(open(configfile) .read())
+    config = json.loads(open(configfile).read())
     dicts = readDict(dictfile, config)
     for line in open(inputfile):
         line = json.loads(line)
@@ -160,8 +160,9 @@ def run(dictfile, inputfile, configfile):
 
 def consolerun():
     if len(sys.argv) == 4:
-        run(sys.argv[1], sys.argv[2], sys.argv[3]) 
+        run(sys.argv[1], sys.argv[2], sys.argv[3])
     else:
         print "Wrong Arguments Number"
         sys.exit()
+
 # run("sampledictionary.json","sampledocuments.json","sampleconfig.json")
