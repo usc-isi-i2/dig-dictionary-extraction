@@ -175,12 +175,13 @@ he_getcandidates(PyObject *self, PyObject *args)
     //occurance count matrix
     int **occur;
     //lower and upper bound of the valid substring of document according to e
-    int lowe,upe;
+    int lowe,upe,Tl;
     psize = 0;
     PyObject *lenofen = PyDicListGetItem(inindex,entity_len,e);
     loe = pyGetint(lenofen);
     lowe = ceil(loe*threshold);
     upe = floor(loe/threshold);
+    Tl = ceil(loe*threshold);
     occur = PyMem_New(int*,los);
     maxentitylen = floor(maxentitylen/threshold) - ceil(maxentitylen*threshold) + 1;
     for(j=0;j<los;j++){
@@ -208,10 +209,10 @@ he_getcandidates(PyObject *self, PyObject *args)
         }
         else{
             qsort(Pe,psize,sizeof(int),comp);
-            if(psize>=lowe){
+            if(psize>=Tl){
                 i = 0;
-                while(i<=psize-lowe){
-                    j = i+lowe-1;
+                while(i<=psize-Tl){
+                    j = i+Tl-1;
                     if(Pe[j]-Pe[i]<=upe){
 
                         //Binary Span
@@ -227,15 +228,20 @@ he_getcandidates(PyObject *self, PyObject *args)
                                 lower = mid + 1;
                         }
                         int slen = Pe[upper] - Pe[i] + 1;
-                        if(lowe<=slen && slen<=upe){
+                        if(Tl<=slen && slen<=upe){
+                            int max;
+                            if (loe > los)
+                                max = loe;
+                            else
+                                max = los;
                             int T = ceil((loe+slen)*(threshold/(1+threshold)));
-                            if (occur[Pe[i]][slen-lowe] >= T){
-                                PyList_Append(result,Py_BuildValue("[i,i,i,f]", e, Pe[i],Pe[upper],1.0*(occur[Pe[i]][slen-lowe])/(slen+loe-occur[Pe[i]][slen-lowe]))); 
+                            if (occur[Pe[i]][slen-Tl] >= T){
+                                PyList_Append(result,Py_BuildValue("[i,i,i,f]", e, Pe[i],Pe[upper],1.0*(occur[Pe[i]][slen-Tl])/(slen+loe-occur[Pe[i]][slen-Tl]))); 
                             }
                         }
                         i++;
                     }else{
-                        i = BinaryShift(i,j,upe,lowe,Pe,psize);
+                        i = BinaryShift(i,j,upe,Tl,Pe,psize);
                         if (i==-1)
                             break;                        
                     }
@@ -248,7 +254,8 @@ he_getcandidates(PyObject *self, PyObject *args)
             PyObject *lenofen = PyDicListGetItem(inindex,entity_len,e);
             loe = pyGetint(lenofen);
             lowe = ceil(loe*threshold);
-            upe = floor(loe/threshold);            
+            upe = floor(loe/threshold); 
+            Tl = ceil(loe*threshold);           
             psize = 0;
             Pe = PyMem_Resize(Pe,int,1);
             Pe[psize] = pi;
