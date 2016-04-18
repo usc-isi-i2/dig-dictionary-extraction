@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3794194c-427e-47a9-bbe3-5b830a0aea7b" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/setup.py" afterPath="$PROJECT_DIR$/setup.py" />
-    </list>
+    <list default="true" id="3794194c-427e-47a9-bbe3-5b830a0aea7b" name="Default" comment="" />
     <ignored path="dig-dictionary-extraction.iws" />
     <ignored path=".idea/workspace.xml" />
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />

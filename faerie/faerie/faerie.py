@@ -64,7 +64,7 @@ def processDoc(line, dicts, config=defualtconfig):
         document_real += " " + line[filed]
 
     jsonline = {}
-    document = document_real.lower().strip()
+    document = document_real.lower().strip().replace(" ", "")
     tokens = list(ngrams(document, n))
     heap = []
     keys = []
