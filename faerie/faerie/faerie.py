@@ -6,6 +6,7 @@ import sys
 defualtconfig = dict(dictionary={"id_attribute": "uri", "value_attribute": ["name"]},
                      document={"id_attribute": "uri", "value_attribute": ["name"]}, token_size=2, threshold=0.8)
 
+
 def readDict(dictfile, config):
     inverted_list = {}
     inverted_index = []
@@ -78,14 +79,13 @@ def processDoc(line, dicts, config=defualtconfig):
         except KeyError:
             pass
     if heap:
-        returnValuesFromC = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
+        return_values_from_c = singleheap.getcandidates(heap, entity_tokennum, inverted_list_len, inverted_index,
                                                      inverted_list, keys, los, maxenl, threshold)
         jsonline["document"] = {}
         jsonline["document"]["id"] = documentId
         jsonline["document"]["value"] = document_real
         jsonline["entities"] = {}
-        for value in returnValuesFromC:
-
+        for value in return_values_from_c:
             temp = dict()
             temp["start"] = value[1]
             temp["end"] = value[2]
@@ -102,9 +102,6 @@ def processDoc(line, dicts, config=defualtconfig):
                 jsonline["entities"][entity_id] = {}
                 jsonline["entities"][entity_id]["value"] = entity_real[value_o]
                 jsonline["entities"][entity_id]["candwins"] = [temp]
-    else:
-        print 'heap is empty'
-        print document_real
 
     return jsonline
 
