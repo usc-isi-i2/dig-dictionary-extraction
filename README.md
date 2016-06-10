@@ -23,7 +23,7 @@ import faerie
 faerie.run("sampledictionary.json","sampledocuments.json","sampleconfig.json")
 ```
 
-### Example input and dictionary file
+### Example input and dictionary file format
 
 ```json
 {
@@ -35,7 +35,7 @@ faerie.run("sampledictionary.json","sampledocuments.json","sampleconfig.json")
 }
 ```
 
-### Example config file
+### Example config file format
 
 ```json
 {
