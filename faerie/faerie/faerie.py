@@ -25,7 +25,7 @@ def readDict(dictfile, config):
         entity_real[i] = line[dictfileds[0]]
         for filed in dictfileds[1:]:
             entity_real[i] += " " + line[filed]
-        entity = entity_real[i].lower().strip()
+        entity = entity_real[i].lower().strip().replace(" ", "")
         inverted_index.append(entity)  # record each entity and its id
         tokens = list(ngrams(entity, n))
         entity_tokennum[entity] = len(tokens)  # record each entity's token number
@@ -88,17 +88,17 @@ def processDoc(line, dicts, config=defualtconfig):
         for value in return_values_from_c:
             temp = dict()
             temp["start"] = value[1]
-            temp["end"] = value[2]
+            temp["end"] = value[2]+2
             temp["score"] = value[3]
             value_o = str(value[0])
             try:
-                jsonline["entities"][entity_realid[value_o]]["candwins"].append(temp)
+                entity_id = entity_realid[value_o]
             except KeyError:
-                try:
-                    entity_id = entity_realid[value_o]
-                except KeyError:
-                    value_o = value[0]
-                    entity_id = entity_realid[value_o]
+                value_o = value[0]
+                entity_id = entity_realid[value_o]
+            try:
+                jsonline["entities"][entity_id]["candwins"].append(temp)
+            except KeyError:
                 jsonline["entities"][entity_id] = {}
                 jsonline["entities"][entity_id]["value"] = entity_real[value_o]
                 jsonline["entities"][entity_id]["candwins"] = [temp]
@@ -152,7 +152,7 @@ def run(dictfile, inputfile, configfile):
     dicts = readDict(dictfile, config)
     for line in open(inputfile):
         line = json.loads(line)
-        print processDoc(line, dicts, config)
+        print json.dumps(processDoc(line, dicts, config))
 
 
 def consolerun():
