@@ -19,8 +19,7 @@ def readDict(dictfile, config):
     n = config["token_size"]
 
     i = 0
-    for line in open(dictfile):
-        line = json.loads(line)
+    for line in dictfile:
         entity_realid[i] = line[config["dictionary"]["id_attribute"]]
         entity_real[i] = line[dictfileds[0]]
         for filed in dictfileds[1:]:
@@ -106,53 +105,17 @@ def processDoc(line, dicts, config=defaultdict):
     return jsonline
 
 
-def readDictlist(dictlist, n):
-    inverted_list = {}
-    inverted_index = []
-    entity_tokennum = {}
-    inverted_list_len = {}
-    entity_realid = {}
-    entity_real = {}
-    maxenl = 0
-
-    i = 0
-    for line in dictlist:
-        names = []
-        if type(line["name"]) == list:
-            names = line["name"]
-        else:
-            names.append(line["name"])
-
-        for name in names:
-            entity_realid[i] = line
-            entity_real[i] = name
-            entity = entity_real[i].lower().strip().replace(" ", "")
-            inverted_index.append(entity)  # record each entity and its id
-            tokens = list(ngrams(entity, n))
-            entity_tokennum[entity] = len(tokens)  # record each entity's token number
-            if maxenl < len(tokens):
-                maxenl = len(tokens)
-            # build inverted lists for tokens
-            tokens = list(set(tokens))
-            for token in tokens:
-                token_n = "".join(token)
-                try:
-                    inverted_list[token_n].append(i)
-                    inverted_list_len[token_n] += 1
-                except KeyError:
-                    inverted_list[token_n] = []
-                    inverted_list[token_n].append(i)
-                    inverted_list_len[token_n] = 1
-            i += 1
-    return [inverted_list, inverted_index, entity_tokennum, inverted_list_len, entity_realid, entity_real, maxenl]
-
-
 def run(dictfile, inputfile, configfile):
-    config = json.loads(open(configfile).read())
-    dicts = readDict(dictfile, config)
-    for line in open(inputfile):
-        line = json.loads(line)
-        print json.dumps(processDoc(line, dicts, config))
+    with open(configfile, 'rb') as f:
+        config = json.loads(f.read())
+
+    with open(dictfile, 'rb') as f:
+        dicts = readDict((json.loads(x) for x in f), config)
+
+    with open(inputfile, 'rb') as f:
+        for line in f:
+            line = json.loads(line)
+            print json.dumps(processDoc(line, dicts, config))
 
 
 def consolerun():
