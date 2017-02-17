@@ -3,7 +3,7 @@ import singleheap
 import json
 import sys
 
-defaultdict = dict(dictionary={"id_attribute": "uri", "value_attribute": ["name"]},
+defaultconfig = dict(dictionary={"id_attribute": "uri", "value_attribute": ["name"]},
                      document={"id_attribute": "uri", "value_attribute": ["name"]}, token_size=2, threshold=0.8)
 
 
@@ -45,7 +45,7 @@ def readDict(dictfile, config):
     return inverted_list, inverted_index, entity_tokennum, inverted_list_len, entity_realid, entity_real, maxenl
 
 
-def processDoc(line, dicts, config=defaultdict):
+def processDoc(line, dicts, config=defaultconfig):
     inverted_list = dicts[0]
     inverted_index = dicts[1]
     entity_tokennum = dicts[2]
